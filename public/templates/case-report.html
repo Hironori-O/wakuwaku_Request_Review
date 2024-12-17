@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>就労状況報告書</title>
+  <style>
+    body {
+      font-family: "Hiragino Kaku Gothic Pro", "ヒラギノ角ゴ Pro W3", "メイリオ", Meiryo, "ＭＳ Ｐゴシック", sans-serif;
+      margin: 0;
+      padding: 20px;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .date {
+      text-align: right;
+      margin-bottom: 20px;
+    }
+    .section {
+      margin-bottom: 30px;
+    }
+    .section-title {
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 15px;
+      padding: 5px 0;
+      border-bottom: 2px solid #333;
+    }
+    .info-item {
+      margin-bottom: 10px;
+    }
+    .label {
+      font-weight: bold;
+      margin-right: 10px;
+    }
+    .episode {
+      white-space: pre-wrap;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>就労状況報告書</h1>
+  </div>
+  
+  <div class="date">
+    作成日：{{date}}
+  </div>
+
+  <div class="section">
+    <div class="section-title">基本情報</div>
+    <div class="info-item">
+      <span class="label">名前（本人）：</span>{{basic_info.person_name}}
+    </div>
+    <div class="info-item">
+      <span class="label">会社名：</span>{{basic_info.company_name}}
+    </div>
+    <div class="info-item">
+      <span class="label">住所：</span>{{basic_info.address}}
+    </div>
+    <div class="info-item">
+      <span class="label">電話番号：</span>{{basic_info.phone}}
+    </div>
+    <div class="info-item">
+      <span class="label">記入者の役職：</span>{{basic_info.position}}
+    </div>
+    <div class="info-item">
+      <span class="label">記入者の氏名：</span>{{basic_info.writer_name}}
+    </div>
+    <div class="info-item">
+      <span class="label">本人との関係：</span>{{basic_info.relationship}}
+    </div>
+    <div class="info-item">
+      <span class="label">勤務形態：</span>{{basic_info.work_type}}
+    </div>
+    <div class="info-item">
+      <span class="label">勤務時間：</span>{{basic_info.work_hours}}
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">就労状況</div>
+    <div class="episode">{{episode}}</div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">障害の様子</div>
+    <div class="info-item">
+      <span class="label">遅刻：</span>{{disability_status.lateness}}
+    </div>
+    <div class="info-item">
+      <span class="label">早退：</span>{{disability_status.early_leaving}}
+    </div>
+    <div class="info-item">
+      <span class="label">急な休み：</span>{{disability_status.sudden_absence}}
+    </div>
+    <div class="info-item">
+      <span class="label">仕事の途中で抜けること：</span>{{disability_status.leaving_during_work}}
+    </div>
+    <div class="info-item">
+      <span class="label">同僚とのコミュニケーション：</span>{{disability_status.communication}}
+    </div>
+    <div class="info-item">
+      <span class="label">作業能力：</span>{{disability_status.work_capability}}
+    </div>
+    <div class="info-item">
+      <span class="label">業務遂行能力：</span>{{disability_status.work_performance}}
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">配慮事項</div>
+    <div class="info-item">
+      <span class="label">物理的環境：</span>{{considerations.physical_environment}}
+    </div>
+    <div class="info-item">
+      <span class="label">作業上の配慮：</span>{{considerations.work_considerations}}
+    </div>
+    <div class="info-item">
+      <span class="label">コミュニケーション支援：</span>{{considerations.communication_support}}
+    </div>
+    <div class="info-item">
+      <span class="label">人的支援：</span>{{considerations.human_support}}
+    </div>
+    <div class="info-item">
+      <span class="label">健康・安全管理：</span>{{considerations.health_safety}}
+    </div>
+    <div class="info-item">
+      <span class="label">キャリア形成：</span>{{considerations.career_development}}
+    </div>
+    <div class="info-item">
+      <span class="label">メンタルヘルス：</span>{{considerations.mental_support}}
+    </div>
+  </div>
+</body>
+</html> 
