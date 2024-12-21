@@ -37,7 +37,7 @@
 </template>
 
 <script setup lang="ts">
-const client = useSupabaseService()
+const supabase = useSupabase()
 const router = useRouter()
 
 const email = ref('')
@@ -45,9 +45,14 @@ const password = ref('')
 const loading = ref(false)
 
 const handleLogin = async () => {
+  if (!email.value || !password.value) {
+    alert('メールアドレスとパスワードを入力してください')
+    return
+  }
+
   try {
     loading.value = true
-    const { error } = await client.auth.signInWithPassword({
+    const { error } = await supabase.auth.signInWithPassword({
       email: email.value,
       password: password.value
     })

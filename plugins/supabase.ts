@@ -10,24 +10,20 @@ export default defineNuxtPlugin((nuxtApp) => {
     throw new Error('Supabase configuration is missing')
   }
 
-  try {
-    const supabase = createClient<Database>(
-      config.public.supabaseUrl,
-      config.public.supabaseKey,
-      {
-        auth: {
-          persistSession: true
-        }
-      }
-    )
-
-    return {
-      provide: {
-        supabase
+  const supabase = createClient<Database>(
+    config.public.supabaseUrl,
+    config.public.supabaseKey,
+    {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true
       }
     }
-  } catch (error) {
-    console.error('Failed to initialize Supabase client:', error)
-    throw error
+  )
+
+  return {
+    provide: {
+      supabase
+    }
   }
 }) 

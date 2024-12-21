@@ -209,14 +209,14 @@
             variant="text"
             @click="showDeleteDialog = false"
           >
-            キャンセル
+            {{ cancelButtonText }}
           </v-btn>
           <v-btn
             color="error"
             @click="handleDelete"
             :loading="deleting"
           >
-            削除
+            {{ deleteButtonText }}
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -238,13 +238,35 @@ import { useSupabase } from '~/composables/useSupabase'
 import { useRouter } from 'vue-router'
 import { onMounted, ref } from 'vue'
 
-const { supabase } = useSupabase()
+// インターフェースの定義
+interface UserLink {
+  id: string
+  email: string
+  url: string
+  status: 'pending' | 'draft' | 'completed'
+  editable: boolean
+  comment: string
+  created_at: string
+  updated_at: string
+  last_updated?: string
+  hashtags: string[]
+  user_cases?: Array<{
+    status: string
+    updated_at: string
+  }>
+}
+
+const supabase = useSupabase()
 const router = useRouter()
 
-// 状態管理
+// ボタンテキストの定義
+const cancelButtonText = 'キャンセル'
+const deleteButtonText = '削除'
+
+// 状態管理（型定義を追加）
 const loading = ref(false)
 const search = ref('')
-const userList = ref([])
+const userList = ref<UserLink[]>([])
 const showAddUserDialog = ref(false)
 const showUrlDialog = ref(false)
 const addingUser = ref(false)
@@ -254,7 +276,7 @@ const snackbarText = ref('')
 const snackbarColor = ref('success')
 const form = ref()
 const showDeleteDialog = ref(false)
-const deleteTarget = ref<any>(null)
+const deleteTarget = ref<UserLink | null>(null)
 const deleting = ref(false)
 const copyingItemId = ref<string | null>(null)
 const copying = ref(false)
@@ -272,47 +294,47 @@ const headers = [
     title: 'メールアドレス',
     key: 'email',
     sortable: true,
-    align: 'start',
+    align: 'start' as const,
     width: '25%'
   },
   {
     title: 'URL',
     key: 'url',
     sortable: false,
-    align: 'start',
+    align: 'start' as const,
     width: '35%'
   },
   {
     title: 'ステータス',
     key: 'status',
     sortable: true,
-    align: 'center',
+    align: 'center' as const,
     width: '10%'
   },
   {
     title: '編集可能',
     key: 'editable',
     sortable: true,
-    align: 'center',
+    align: 'center' as const,
     width: '10%'
   },
   {
     title: 'コメント',
     key: 'comment',
     sortable: false,
-    align: 'start',
+    align: 'start' as const,
     width: '15%'
   },
   {
     title: '操作',
     key: 'actions',
     sortable: false,
-    align: 'center',
+    align: 'center' as const,
     width: '5%'
   }
 ]
 
-// ユーザー一覧の取得
+// ユーザー一覧��取得
 const fetchUserList = async () => {
   loading.value = true
   try {
@@ -450,27 +472,23 @@ const copyToClipboard = async () => {
 }
 
 // データテーブル用のコピー機能
-const handleCopyUrl = async (url: string) => {
+const handleCopyUrl = async (url: string): Promise<void> => {
   if (!url) {
     showError('URLが指定されていません')
     return
   }
 
-  const item = userList.value.find(i => i.url === url)
+  const item = userList.value.find((i: UserLink) => i.url === url)
   if (item) {
     copyingItemId.value = item.id
   }
 
   try {
-    // まずClipboard APIを試す
-    try {
-      await navigator.clipboard.writeText(url)
-      showSuccess('URLをコピーしました')
-      return
-    } catch (clipboardError) {
-      console.warn('Clipboard API failed:', clipboardError)
-    }
-
+    await navigator.clipboard.writeText(url)
+    showSuccess('URLをコピーしました')
+  } catch (clipboardError) {
+    console.warn('Clipboard API failed:', clipboardError)
+    
     // フォールバック: テキストエリアを使用
     const textArea = document.createElement('textarea')
     textArea.value = url
@@ -494,24 +512,26 @@ const handleCopyUrl = async (url: string) => {
     textArea.focus()
     textArea.select()
     
-    const success = document.execCommand('copy')
-    document.body.removeChild(textArea)
-    
-    if (success) {
-      showSuccess('URLをコピーしました')
-    } else {
-      throw new Error('コピーに失敗しました')
+    try {
+      const success = document.execCommand('copy')
+      if (success) {
+        showSuccess('URLをコピーしました')
+      } else {
+        throw new Error('コピーに失敗しました')
+      }
+    } catch (error) {
+      console.error('Copy error:', error)
+      showError('URLのコピーに失敗しました')
+    } finally {
+      document.body.removeChild(textArea)
     }
-  } catch (error) {
-    console.error('Copy error:', error)
-    showError('URLのコピーに失敗しました')
   } finally {
     copyingItemId.value = null
   }
 }
 
 // 編集可否の更新
-const updateEditable = async (item: any) => {
+const updateEditable = async (item: UserLink) => {
   try {
     loading.value = true
     const { error } = await supabase
@@ -532,7 +552,7 @@ const updateEditable = async (item: any) => {
     await fetchUserList()
   } catch (error) {
     console.error('Error updating editable:', error)
-    showError('更新に敗しました')
+    showError('更新に失敗しました')
     // エラーの場合は状態を元に戻す
     item.editable = !item.editable
   } finally {
@@ -541,7 +561,7 @@ const updateEditable = async (item: any) => {
 }
 
 // ステータスの表示テキストを取得
-const getStatusText = (status: string) => {
+const getStatusText = (status: string): string => {
   switch (status) {
     case 'completed':
       return '回答済み'
@@ -555,7 +575,7 @@ const getStatusText = (status: string) => {
 }
 
 // ステータスの色を取得
-const getStatusColor = (status: string) => {
+const getStatusColor = (status: string): string => {
   switch (status) {
     case 'completed':
       return 'success'
@@ -569,20 +589,20 @@ const getStatusColor = (status: string) => {
 }
 
 // スナックバー表示用ヘルパー関数
-const showSuccess = (text: string) => {
+const showSuccess = (text: string): void => {
   snackbarColor.value = 'success'
   snackbarText.value = text
   showSnackbar.value = true
 }
 
-const showError = (text: string) => {
+const showError = (text: string): void => {
   snackbarColor.value = 'error'
   snackbarText.value = text
   showSnackbar.value = true
 }
 
 // 削除確認ダイアログを表示
-const confirmDelete = (item: any) => {
+const confirmDelete = (item: UserLink): void => {
   deleteTarget.value = item
   showDeleteDialog.value = true
 }
