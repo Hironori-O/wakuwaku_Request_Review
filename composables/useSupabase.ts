@@ -1,25 +1,11 @@
-import { createClient, SupabaseClient } from '@supabase/supabase-js'
-
-let supabaseInstance: SupabaseClient | null = null
+import type { SupabaseClient } from '@supabase/supabase-js'
+import { createClient } from '@supabase/supabase-js'
+import type { Database } from '@/types/supabase'
 
 export const useSupabase = () => {
-  const config = useRuntimeConfig()
-
-  if (!supabaseInstance && config.public.supabaseUrl && config.public.supabaseKey) {
-    supabaseInstance = createClient(
-      config.public.supabaseUrl,
-      config.public.supabaseKey,
-      {
-        auth: {
-          autoRefreshToken: true,
-          persistSession: true
-        }
-      }
-    )
-  }
-
+  const { $supabase } = useNuxtApp()
   return {
-    supabase: supabaseInstance
+    supabase: $supabase as SupabaseClient<Database>
   }
 }
 
@@ -27,17 +13,19 @@ export const useSupabase = () => {
 export const useSupabaseService = () => {
   const config = useRuntimeConfig()
 
-  console.log('Service client config:', {
-    hasUrl: !!config.public.supabaseUrl,
-    hasServiceKey: !!config.supabaseServiceKey
-  })
-
   if (!config.supabaseServiceKey) {
-    throw new Error('SUPABASE_SERVICE_KEY is not configured in .env file')
+    console.error('SUPABASE_SERVICE_KEY is missing in environment variables')
+    throw new Error('SUPABASE_SERVICE_KEY is required for server-side operations')
   }
 
-  return createClient(
+  return createClient<Database>(
     config.public.supabaseUrl,
-    config.supabaseServiceKey
+    config.supabaseServiceKey,
+    {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false
+      }
+    }
   )
 } 

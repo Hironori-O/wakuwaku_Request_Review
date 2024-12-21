@@ -1,6 +1,6 @@
 <template>
   <v-container>
-    <template v-if="isUsed">
+    <template v-if="isUsed && savedCase">
       <v-alert
         type="info"
         text="このケースは既に保存されています"
@@ -104,6 +104,19 @@ import BasicInfoForm from '~/components/user/BasicInfoForm.vue'
 import DisabilityStatusForm from '~/components/user/DisabilityStatusForm.vue'
 import ConsiderationsForm from '~/components/user/ConsiderationsForm.vue'
 import CaseViewer from '~/components/user/CaseViewer.vue'
+import type { CaseData, Hashtag } from '~/types/case'  // 型をインポート
+
+// APIレスポンスの型定義
+interface ApiResponse {
+  success: boolean;
+  error?: string;
+  data?: {
+    isActive: boolean;
+    isUsed: boolean;
+    savedCase?: CaseData;
+    hashtags?: Hashtag[];
+  };
+}
 
 const store = useUserFormStore()
 const saving = ref(false)
@@ -112,10 +125,10 @@ const showError = ref(false)
 const successMessage = ref('保存が完了しました')
 const errorMessage = ref('')
 const isUsed = ref(false)
-const savedCase = ref(null)
+const savedCase = ref<CaseData | null>(null)
 const isEditable = ref(true)
 const generating = ref(false)
-const hashtags = ref([])
+const hashtags = ref<Hashtag[]>([])
 
 // リンクIDの取得と初期化処理
 const route = useRoute()
@@ -183,16 +196,7 @@ const checkEditable = async () => {
 
   try {
     console.log('Checking link:', linkId.value)
-    const response = await $fetch<{
-      success: boolean;
-      error?: string;
-      data?: {
-        isActive: boolean;
-        isUsed: boolean;
-        savedCase?: any;
-        hashtags?: any[];
-      };
-    }>(`/api/get-link-info?link=${linkId.value}`)
+    const response = await $fetch<ApiResponse>(`/api/get-link-info?link=${linkId.value}`)
     
     console.log('API response:', response)
 

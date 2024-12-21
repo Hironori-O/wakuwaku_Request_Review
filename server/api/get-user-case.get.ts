@@ -1,11 +1,8 @@
-import { createClient } from '@supabase/supabase-js'
+import { useSupabaseService } from '~/composables/useSupabase'
 
 export default defineEventHandler(async (event) => {
-  const config = useRuntimeConfig()
-  const supabase = createClient(
-    config.public.supabaseUrl,
-    config.public.supabaseKey
-  )
+  // サーバーサイドのSupabaseクライアントを取得
+  const supabase = useSupabaseService()
 
   try {
     const query = getQuery(event)
@@ -42,7 +39,7 @@ export default defineEventHandler(async (event) => {
       throw new Error('ハッシュタグの取得に失敗しました')
     }
 
-    const hashtagIds = hashtagRelations.map(relation => relation.hashtag_id)
+    const hashtagIds = hashtagRelations.map((relation: { hashtag_id: string }) => relation.hashtag_id)
 
     const { data: hashtags, error: hashtagsError } = await supabase
       .from('hashtags')

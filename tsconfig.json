@@ -1,4 +1,13 @@
 {
-  // https://v3.nuxtjs.org/concepts/typescript
-  "extends": "./.nuxt/tsconfig.json"
+  // Nuxt 3の推奨設定に戻します
+  "extends": "./.nuxt/tsconfig.json",
+  "compilerOptions": {
+    "strict": true,
+    "skipLibCheck": true,
+    "types": [
+      "@types/node",
+      "nuxt",
+      "./types/nuxt.d.ts"
+    ]
+  }
 }

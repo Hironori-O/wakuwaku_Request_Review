@@ -1,9 +1,6 @@
 import { useSupabaseService } from '~/composables/useSupabase'
 
 export default defineEventHandler(async (event) => {
-  const config = useRuntimeConfig()
-  const supabase = useSupabaseService()
-
   try {
     const query = getQuery(event)
     const linkId = query.link || query.id as string
@@ -17,6 +14,7 @@ export default defineEventHandler(async (event) => {
     }
 
     console.log('Fetching link info for:', linkId)
+    const supabase = useSupabaseService()
 
     // リンク情報の取得
     const { data: linkData, error: linkError } = await supabase
@@ -53,7 +51,7 @@ export default defineEventHandler(async (event) => {
       editable: linkData.editable
     })
 
-    // ユーザーケース情報��取得
+    // ユーザーケース情報の取得
     const { data: caseData, error: caseError } = await supabase
       .from('user_cases')
       .select('*')
@@ -83,7 +81,8 @@ export default defineEventHandler(async (event) => {
         email: linkData.email,
         isUsed: linkData.used,
         savedCase: caseData || null,
-        isActive: linkData.editable !== false
+        isActive: linkData.editable !== false,
+        hashtags: linkData.hashtags || []
       }
     }
   } catch (error) {

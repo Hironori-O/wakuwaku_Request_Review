@@ -7,18 +7,20 @@ export default defineNuxtConfig({
     '@pinia/nuxt',
     '@vueuse/nuxt'
   ],
+  plugins: [
+    '~/plugins/supabase.ts'
+  ],
   runtimeConfig: {
+    supabaseServiceKey: process.env.SUPABASE_SERVICE_KEY,
     public: {
       supabaseUrl: process.env.SUPABASE_URL,
-      supabaseKey: process.env.SUPABASE_KEY,
-      baseUrl: process.env.BASE_URL || 'http://localhost:3000'
+      supabaseKey: process.env.SUPABASE_KEY
     },
     openaiApiKey: process.env.OPENAI_API_KEY,
     gmailUser: process.env.GMAIL_USER,
     gmailClientId: process.env.GMAIL_CLIENT_ID,
     gmailClientSecret: process.env.GMAIL_CLIENT_SECRET,
-    gmailRefreshToken: process.env.GMAIL_REFRESH_TOKEN,
-    supabaseServiceKey: process.env.SUPABASE_SERVICE_KEY
+    gmailRefreshToken: process.env.GMAIL_REFRESH_TOKEN
   },
   build: {
     transpile: ['vuetify']
@@ -32,10 +34,16 @@ export default defineNuxtConfig({
       ]
     }
   },
+  imports: {
+    dirs: ['composables/**']
+  },
   nitro: {
-    moduleSideEffects: ['handlebars'],
-    externals: {
-      inline: ['handlebars']
+    routeRules: {
+      // ルートルールの設定
     }
+  },
+  experimental: {
+    // 実験的な機能の設定
+    payloadExtraction: false
   }
 })

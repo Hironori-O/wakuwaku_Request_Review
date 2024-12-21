@@ -1,11 +1,7 @@
-import { createClient } from '@supabase/supabase-js'
+import { useSupabaseService } from '~/composables/useSupabase'
 
 export default defineEventHandler(async (event) => {
-  const config = useRuntimeConfig()
-  const supabase = createClient(
-    config.public.supabaseUrl,
-    config.supabaseServiceKey
-  )
+  const supabase = useSupabaseService()
 
   try {
     const { data, error } = await supabase

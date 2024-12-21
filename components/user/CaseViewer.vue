@@ -243,54 +243,17 @@
 </template>
 
 <script setup lang="ts">
-interface BasicInfo {
-  person_name: string
-  company_name: string
-  address: string
-  phone: string
-  position: string
-  writer_name: string
-  relationship: string
-  work_type: string
-  work_hours: string
+import type { CaseData, Hashtag } from '~/types/case'
+
+// Propsの定義
+interface Props {
+  caseData: CaseData;
+  hashtags: Hashtag[];
 }
 
-interface DisabilityStatus {
-  lateness: string
-  early_leaving: string
-  sudden_absence: string
-  leaving_during_work: string
-  communication: string
-  work_capability: string[]
-  work_performance: string[]
-}
-
-interface Considerations {
-  physical_environment: string[]
-  work_considerations: string[]
-  communication_support: string[]
-  human_support: string[]
-  health_safety: string[]
-  career_development: string[]
-  mental_support: string[]
-}
-
-interface CaseData {
-  id: string
-  basic_info: BasicInfo
-  disability_status: DisabilityStatus
-  considerations: Considerations
-  episode: string
-}
-
-interface Hashtag {
-  id: string
-  text: string
-}
-
-const props = defineProps<{
-  caseData: CaseData
-  hashtags?: Hashtag[]
+const props = defineProps<Props>()
+const emit = defineEmits<{
+  (e: 'edit'): void
 }>()
 
 // caseDataをreactiveにする
@@ -298,7 +261,15 @@ const localCaseData = reactive<CaseData>({
   id: props.caseData.id,
   basic_info: { ...props.caseData.basic_info },
   disability_status: { ...props.caseData.disability_status },
-  considerations: { ...props.caseData.considerations },
+  considerations: {
+    physical_environment: [...(props.caseData.considerations?.physical_environment || [])],
+    work_considerations: [...(props.caseData.considerations?.work_considerations || [])],
+    communication_support: [...(props.caseData.considerations?.communication_support || [])],
+    human_support: [...(props.caseData.considerations?.human_support || [])],
+    health_safety: [...(props.caseData.considerations?.health_safety || [])],
+    career_development: [...(props.caseData.considerations?.career_development || [])],
+    mental_support: [...(props.caseData.considerations?.mental_support || [])]
+  },
   episode: props.caseData.episode
 })
 
@@ -327,20 +298,13 @@ const hasAttendanceIssues = computed(() => {
 })
 
 // 勤怠状況の表示テキストを生成
-const getAttendanceText = (value: string) => {
-  return frequencyOptions[value] || value
+const getAttendanceText = (value: string): string => {
+  return frequencyOptions[value as keyof typeof frequencyOptions] || value
 }
 
 // コミュニケーションの表示テキストを生成
-const getCommunicationText = (value: string) => {
-  return communicationOptions[value] || value
-}
-
-const emit = defineEmits(['edit'])
-
-// 編集ボタンのハンドラー
-const handleEdit = () => {
-  emit('edit')
+const getCommunicationText = (value: string): string => {
+  return communicationOptions[value as keyof typeof communicationOptions] || value
 }
 
 const generating = ref(false)
@@ -401,8 +365,13 @@ const handleGeneratePdf = async () => {
   }
 }
 
+// 編集ボタンのハンドラー
+const handleEdit = () => {
+  emit('edit')
+}
+
 // プロパティの変更を監視
 watch(() => props.caseData, (newValue) => {
   Object.assign(localCaseData, newValue)
 }, { deep: true })
-</script> 
+</script>
