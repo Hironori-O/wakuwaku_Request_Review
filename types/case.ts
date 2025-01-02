@@ -10,6 +10,10 @@ export interface CaseData {
     relationship: string;
     work_type: string;
     work_hours: string;
+    hire_date: string;
+    department: string;
+    daily_work_hours: string;
+    weekly_work_days: string;
   };
   disability_status: {
     lateness: string;

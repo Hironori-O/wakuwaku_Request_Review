@@ -109,6 +109,57 @@
               variant="outlined"
             />
           </v-col>
+          <v-col cols="12" md="6">
+            <v-text-field
+              v-model="store.basic_info.hire_date"
+              label="入社日"
+              type="date"
+              :disabled="isDisabled"
+              required
+              density="comfortable"
+              variant="outlined"
+              :rules="[v => !!v || '入社日は必須です']"
+            />
+          </v-col>
+          <v-col cols="12" md="6">
+            <v-text-field
+              v-model="store.basic_info.department"
+              label="所属部署"
+              :disabled="isDisabled"
+              required
+              density="comfortable"
+              variant="outlined"
+              :rules="[v => !!v || '所属部署は必須です']"
+            />
+          </v-col>
+          <v-col cols="6">
+            <v-text-field
+              v-model="store.basic_info.daily_work_hours"
+              label="1日の勤務時間"
+              type="number"
+              min="1"
+              max="24"
+              :disabled="isDisabled"
+              required
+              density="comfortable"
+              variant="outlined"
+              :rules="[v => !!v || '1日の勤務時間は必須です']"
+            />
+          </v-col>
+          <v-col cols="6">
+            <v-text-field
+              v-model="store.basic_info.weekly_work_days"
+              label="週の勤務日数"
+              type="number"
+              min="1"
+              max="7"
+              :disabled="isDisabled"
+              required
+              density="comfortable"
+              variant="outlined"
+              :rules="[v => !!v || '週の勤務日数は必須です']"
+            />
+          </v-col>
         </v-row>
       </v-form>
     </v-card-text>

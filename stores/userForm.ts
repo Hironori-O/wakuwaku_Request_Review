@@ -11,7 +11,11 @@ interface BasicInfo {
   relationship: string
   work_type: string
   work_hours: string
-  [key: string]: string
+  hire_date: string
+  department: string
+  daily_work_hours: number
+  weekly_work_days: number
+  [key: string]: string | number
 }
 
 interface DisabilityStatus {
@@ -45,7 +49,11 @@ export const useUserFormStore = defineStore('userForm', {
       writer_name: '',
       relationship: '',
       work_type: '',
-      work_hours: ''
+      work_hours: '',
+      hire_date: '',
+      department: '',
+      daily_work_hours: 8,
+      weekly_work_days: 5,
     } as BasicInfo,
     disability_status: {
       lateness: '',
@@ -106,10 +114,17 @@ export const useUserFormStore = defineStore('userForm', {
         'writer_name',
         'relationship',
         'work_type',
-        'work_hours'
+        'work_hours',
+        'hire_date',
+        'department',
+        'daily_work_hours',
+        'weekly_work_days'
       ] as const
 
-      return requiredFields.every(field => this.basic_info[field] !== '')
+      return requiredFields.every(field => 
+        typeof this.basic_info[field] !== 'undefined' && 
+        this.basic_info[field] !== ''
+      )
     },
 
     async generateEpisode() {
@@ -154,7 +169,11 @@ export const useUserFormStore = defineStore('userForm', {
           writer_name: '',
           relationship: '',
           work_type: '',
-          work_hours: ''
+          work_hours: '',
+          hire_date: '',
+          department: '',
+          daily_work_hours: 8,
+          weekly_work_days: 5,
         },
         disability_status: {
           lateness: '',

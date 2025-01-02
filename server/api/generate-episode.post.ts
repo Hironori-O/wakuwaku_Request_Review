@@ -2,11 +2,12 @@ import OpenAI from 'openai'
 
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig()
-  const openai = new OpenAI({
-    apiKey: config.openaiApiKey
-  })
 
   try {
+    const openai = new OpenAI({
+      apiKey: config.openaiApiKey
+    })
+
     const body = await readBody(event)
     console.log('Complete request body:', JSON.stringify(body, null, 2))
 
@@ -59,6 +60,10 @@ export default defineEventHandler(async (event) => {
 電話番号：${basic_info?.phone || ''}
 勤務形態：${basic_info?.work_type || ''}
 勤務時間：${basic_info?.work_hours || ''}
+入社日：${basic_info?.hire_date || ''}
+所属部署：${basic_info?.department || ''}
+1日の勤務時間：${basic_info?.daily_work_hours || ''}時間
+週の勤務日数：${basic_info?.weekly_work_days || ''}日
 
 【障害の様子】
 ・勤怠状況：${attendanceText || '特に問題なし'}

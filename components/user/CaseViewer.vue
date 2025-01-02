@@ -78,6 +78,42 @@
             <v-list-item-title>勤務時間</v-list-item-title>
             <v-list-item-subtitle>{{ localCaseData.basic_info?.work_hours }}</v-list-item-subtitle>
           </v-list-item>
+          <v-list-item v-if="'hire_date' in localCaseData.basic_info">
+            <template v-slot:prepend>
+              <v-icon>mdi-calendar</v-icon>
+            </template>
+            <v-list-item-title>入社日</v-list-item-title>
+            <v-list-item-subtitle>
+              {{ localCaseData.basic_info.hire_date || '未設定' }}
+            </v-list-item-subtitle>
+          </v-list-item>
+          <v-list-item v-if="'department' in localCaseData.basic_info">
+            <template v-slot:prepend>
+              <v-icon>mdi-office-building</v-icon>
+            </template>
+            <v-list-item-title>所属部署</v-list-item-title>
+            <v-list-item-subtitle>
+              {{ localCaseData.basic_info.department || '未設定' }}
+            </v-list-item-subtitle>
+          </v-list-item>
+          <v-list-item v-if="'daily_work_hours' in localCaseData.basic_info">
+            <template v-slot:prepend>
+              <v-icon>mdi-clock</v-icon>
+            </template>
+            <v-list-item-title>1日の勤務時間</v-list-item-title>
+            <v-list-item-subtitle>
+              {{ localCaseData.basic_info.daily_work_hours }}時間
+            </v-list-item-subtitle>
+          </v-list-item>
+          <v-list-item v-if="'weekly_work_days' in localCaseData.basic_info">
+            <template v-slot:prepend>
+              <v-icon>mdi-calendar-week</v-icon>
+            </template>
+            <v-list-item-title>週の勤務日数</v-list-item-title>
+            <v-list-item-subtitle>
+              {{ localCaseData.basic_info.weekly_work_days }}日
+            </v-list-item-subtitle>
+          </v-list-item>
         </v-list>
       </div>
 
@@ -192,7 +228,12 @@
       <div class="mb-4">
         <h3 class="text-h6 mb-2">エピソード</h3>
         <v-card variant="outlined" class="pa-4">
-          <div style="white-space: pre-wrap;">{{ localCaseData.episode }}</div>
+          <div v-if="localCaseData.episode" style="white-space: pre-wrap;">
+            {{ localCaseData.episode }}
+          </div>
+          <div v-else class="text-grey">
+            エピソードはまだ生成されていません
+          </div>
         </v-card>
       </div>
 
@@ -259,7 +300,13 @@ const emit = defineEmits<{
 // caseDataをreactiveにする
 const localCaseData = reactive<CaseData>({
   id: props.caseData.id,
-  basic_info: { ...props.caseData.basic_info },
+  basic_info: {
+    ...props.caseData.basic_info,
+    hire_date: 'hire_date' in (props.caseData.basic_info || {}) ? props.caseData.basic_info.hire_date : '',
+    department: 'department' in (props.caseData.basic_info || {}) ? props.caseData.basic_info.department : '',
+    daily_work_hours: 'daily_work_hours' in (props.caseData.basic_info || {}) ? props.caseData.basic_info.daily_work_hours : '',
+    weekly_work_days: 'weekly_work_days' in (props.caseData.basic_info || {}) ? props.caseData.basic_info.weekly_work_days : ''
+  },
   disability_status: { ...props.caseData.disability_status },
   considerations: {
     physical_environment: [...(props.caseData.considerations?.physical_environment || [])],
@@ -270,7 +317,13 @@ const localCaseData = reactive<CaseData>({
     career_development: [...(props.caseData.considerations?.career_development || [])],
     mental_support: [...(props.caseData.considerations?.mental_support || [])]
   },
-  episode: props.caseData.episode
+  episode: props.caseData.episode || ''
+})
+
+// デバッグ用のログ出力を追加
+console.log('CaseViewer received data:', {
+  basic_info: props.caseData.basic_info,
+  localData: localCaseData.basic_info
 })
 
 // 勤怠状況の表示用オプション
@@ -370,8 +423,71 @@ const handleEdit = () => {
   emit('edit')
 }
 
-// プロパティの変更を監視
+// デバッグログを強化
+onMounted(() => {
+  console.log('CaseViewer mounted - Full Data:', {
+    originalData: props.caseData,
+    basicInfo: {
+      ...props.caseData.basic_info,
+      hire_date_type: typeof props.caseData.basic_info?.hire_date,
+      department_type: typeof props.caseData.basic_info?.department,
+      daily_hours_type: typeof props.caseData.basic_info?.daily_work_hours,
+      weekly_days_type: typeof props.caseData.basic_info?.weekly_work_days,
+    },
+    localData: {
+      ...localCaseData.basic_info,
+      hire_date_type: typeof localCaseData.basic_info?.hire_date,
+      department_type: typeof localCaseData.basic_info?.department,
+      daily_hours_type: typeof localCaseData.basic_info?.daily_work_hours,
+      weekly_days_type: typeof localCaseData.basic_info?.weekly_work_days,
+    }
+  })
+})
+
+// Props受け取り時のデバッグログを追加
+onMounted(() => {
+  console.log('CaseViewer Props:', {
+    original: props.caseData,
+    basic_info: props.caseData?.basic_info,
+    basic_info_keys: Object.keys(props.caseData?.basic_info || {}),
+    basic_info_values: props.caseData?.basic_info
+  })
+})
+
+// データ更新時の監視
 watch(() => props.caseData, (newValue) => {
-  Object.assign(localCaseData, newValue)
+  console.log('CaseData updated:', {
+    newValue,
+    basicInfo: newValue.basic_info
+  })
+
+  // 全てのデータを更新
+  localCaseData.id = newValue.id
+  localCaseData.basic_info = {
+    person_name: newValue.basic_info?.person_name || '',
+    company_name: newValue.basic_info?.company_name || '',
+    address: newValue.basic_info?.address || '',
+    phone: newValue.basic_info?.phone || '',
+    position: newValue.basic_info?.position || '',
+    writer_name: newValue.basic_info?.writer_name || '',
+    relationship: newValue.basic_info?.relationship || '',
+    work_type: newValue.basic_info?.work_type || '',
+    work_hours: newValue.basic_info?.work_hours || '',
+    hire_date: newValue.basic_info?.hire_date || '',
+    department: newValue.basic_info?.department || '',
+    daily_work_hours: newValue.basic_info?.daily_work_hours || '',
+    weekly_work_days: newValue.basic_info?.weekly_work_days || ''
+  }
+  localCaseData.disability_status = { ...newValue.disability_status }
+  localCaseData.considerations = {
+    physical_environment: [...(newValue.considerations?.physical_environment || [])],
+    work_considerations: [...(newValue.considerations?.work_considerations || [])],
+    communication_support: [...(newValue.considerations?.communication_support || [])],
+    human_support: [...(newValue.considerations?.human_support || [])],
+    health_safety: [...(newValue.considerations?.health_safety || [])],
+    career_development: [...(newValue.considerations?.career_development || [])],
+    mental_support: [...(newValue.considerations?.mental_support || [])]
+  }
+  localCaseData.episode = newValue.episode || ''
 }, { deep: true })
 </script>

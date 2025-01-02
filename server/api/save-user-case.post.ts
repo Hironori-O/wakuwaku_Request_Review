@@ -10,6 +10,10 @@ interface BasicInfo {
   relationship: string
   work_type: string
   work_hours: string
+  hire_date: string
+  department: string
+  daily_work_hours: string
+  weekly_work_days: string
 }
 
 interface DisabilityStatus {
@@ -51,13 +55,44 @@ function isNotEmpty(value: any): boolean {
 
 // バリデーション関数
 function validateBasicInfo(basicInfo: BasicInfo, isDraft: boolean): boolean {
+  // 一時保存の場合は、少なくとも1つのフィールドが入力されていればOK
   if (isDraft) {
-    // 一時保存の場合は、少なくとも1つのフィールドが入力されていればOK
-    return Object.values(basicInfo).some(value => isNotEmpty(value))
+    const hasInput = Object.entries(basicInfo).some(([key, value]) => {
+      // 数値型の場合は0以外の値があるかチェック
+      if (typeof value === 'number') {
+        return value > 0
+      }
+      // 文字列の場合は空でないかチェック
+      return value !== '' && value !== null && value !== undefined
+    })
+
+    return hasInput
   }
   
   // 完了保存の場合は全フィールドが必須
-  return Object.values(basicInfo).every(value => isNotEmpty(value))
+  const requiredFields = [
+    'person_name',
+    'company_name',
+    'address',
+    'phone',
+    'position',
+    'writer_name',
+    'relationship',
+    'work_type',
+    'work_hours',
+    'hire_date',
+    'department',
+    'daily_work_hours',
+    'weekly_work_days'
+  ] as const
+
+  return requiredFields.every(field => {
+    const value = basicInfo[field]
+    if (typeof value === 'number') {
+      return value > 0
+    }
+    return value !== '' && value !== null && value !== undefined
+  })
 }
 
 export default defineEventHandler(async (event) => {
@@ -121,11 +156,20 @@ export default defineEventHandler(async (event) => {
 
     let caseError
     if (existingCase) {
+      // データの保存前にログ出力
+      console.log('Saving basic info:', {
+        ...basic_info,
+        hire_date: basic_info.hire_date || '',
+        department: basic_info.department || '',
+        daily_work_hours: basic_info.daily_work_hours || '8',
+        weekly_work_days: basic_info.weekly_work_days || '5'
+      })
+
       // 既存のケースを更新
       const { error } = await supabase
         .from('user_cases')
         .update({
-          company_name: basic_info.company_name || '',  // 一時保存時は空文字を許容
+          company_name: basic_info.company_name || '',
           basic_info: {
             person_name: basic_info.person_name,
             company_name: basic_info.company_name,
@@ -135,37 +179,44 @@ export default defineEventHandler(async (event) => {
             writer_name: basic_info.writer_name,
             relationship: basic_info.relationship,
             work_type: basic_info.work_type,
-            work_hours: basic_info.work_hours
+            work_hours: basic_info.work_hours,
+            hire_date: basic_info.hire_date ,
+            department: basic_info.department,
+            daily_work_hours: basic_info.daily_work_hours ,
+            weekly_work_days: basic_info.weekly_work_days 
           },
           disability_status,
           considerations,
-          episode: episode || '',
+          episode,
           status: status || 'draft',
           updated_at: new Date().toISOString()
         })
         .eq('id', existingCase.id)
       caseError = error
+
+      // 保存後のデータも確認
+      const { data: savedCase, error: checkError } = await supabase
+        .from('user_cases')
+        .select('basic_info')
+        .eq('id', existingCase.id)
+        .single()
+
+      console.log('Saved basic info:', savedCase?.basic_info)
     } else {
       // 新規ケースを作成
       const { error } = await supabase
         .from('user_cases')
         .insert({
           link_id,
-          company_name: basic_info.company_name || '',  // 一時保存時は空文字を許容
+          company_name: basic_info.company_name || '',
           basic_info: {
-            person_name: basic_info.person_name,
-            company_name: basic_info.company_name,
-            address: basic_info.address,
-            phone: basic_info.phone,
-            position: basic_info.position,
-            writer_name: basic_info.writer_name,
-            relationship: basic_info.relationship,
-            work_type: basic_info.work_type,
-            work_hours: basic_info.work_hours
+            ...basic_info,
+            daily_work_hours: '8',
+            weekly_work_days: '5'
           },
           disability_status,
           considerations,
-          episode: episode || '',
+          episode,
           status: status || 'draft'
         })
       caseError = error

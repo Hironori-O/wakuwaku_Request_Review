@@ -1,13 +1,25 @@
 {
-  // Nuxt 3の推奨設定に戻します
-  "extends": "./.nuxt/tsconfig.json",
   "compilerOptions": {
+    "target": "esnext",
+    "module": "esnext",
+    "moduleResolution": "node",
     "strict": true,
+    "jsx": "preserve",
     "skipLibCheck": true,
     "types": [
       "@types/node",
-      "nuxt",
-      "./types/nuxt.d.ts"
-    ]
-  }
+      "nuxt"
+    ],
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./*"],
+      "~/*": ["./*"]
+    },
+    "allowJs": true,
+    "resolveJsonModule": true,
+    "esModuleInterop": true
+  },
+  "exclude": [
+    "node_modules"
+  ]
 }

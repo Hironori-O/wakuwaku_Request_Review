@@ -1,3 +1,5 @@
+// 一時的に使用しないためコメントアウト
+/*
 import { createClient } from '@supabase/supabase-js'
 
 export default defineEventHandler(async (event) => {
@@ -44,6 +46,18 @@ export default defineEventHandler(async (event) => {
       throw new Error('ハッシュタグの取得に失敗しました')
     }
 
+    // データ取得結果を確認
+    console.log('Latest case data:', {
+      basic_info: caseData?.basic_info,
+      basic_info_raw: JSON.stringify(caseData?.basic_info, null, 2),
+      basic_info_keys: caseData?.basic_info ? Object.keys(caseData.basic_info) : [],
+      basic_info_values: caseData?.basic_info ? Object.entries(caseData.basic_info).map(([key, value]) => ({
+        field: key,
+        type: typeof value,
+        value: value
+      })) : []
+    })
+
     return {
       success: true,
       data: {
@@ -58,4 +72,5 @@ export default defineEventHandler(async (event) => {
       error: error instanceof Error ? error.message : 'ケースの取得に失敗しました'
     }
   }
-}) 
+})
+*/ 

@@ -125,7 +125,6 @@ const showError = ref(false)
 const successMessage = ref('保存が完了しました')
 const errorMessage = ref('')
 const isUsed = ref(false)
-const savedCase = ref<CaseData | null>(null)
 const isEditable = ref(true)
 const generating = ref(false)
 const hashtags = ref<Hashtag[]>([])
@@ -177,6 +176,10 @@ const isFormValid = computed(() => {
     basic_info.relationship &&
     basic_info.work_type &&
     basic_info.work_hours &&
+    basic_info.hire_date &&
+    basic_info.department &&
+    basic_info.daily_work_hours &&
+    basic_info.weekly_work_days &&
     disability_status.lateness &&
     disability_status.early_leaving &&
     disability_status.sudden_absence &&
@@ -226,8 +229,6 @@ const checkEditable = async () => {
     
     isUsed.value = data.isUsed || false
     if (data.savedCase) {
-      savedCase.value = data.savedCase
-      // 保存データをフォームに反映
       const savedBasicInfo = data.savedCase.basic_info || {}
       
       // デバッグログを追加
@@ -245,7 +246,11 @@ const checkEditable = async () => {
           writer_name: savedBasicInfo.writer_name || '',
           relationship: savedBasicInfo.relationship || '',
           work_type: savedBasicInfo.work_type || '',
-          work_hours: savedBasicInfo.work_hours || ''
+          work_hours: savedBasicInfo.work_hours || '',
+          hire_date: savedBasicInfo.hire_date || '',
+          department: savedBasicInfo.department || '',
+          daily_work_hours: savedBasicInfo.daily_work_hours || '',
+          weekly_work_days: savedBasicInfo.weekly_work_days || ''
         },
         disability_status: {
           ...store.disability_status,
@@ -306,25 +311,21 @@ const handleSave = async (isDraft: boolean) => {
   try {
     const formData = {
       basic_info: {
-        person_name: store.basic_info.person_name,
-        company_name: store.basic_info.company_name,
-        address: store.basic_info.address,
-        phone: store.basic_info.phone,
-        position: store.basic_info.position,
-        writer_name: store.basic_info.writer_name,
-        relationship: store.basic_info.relationship,
-        work_type: store.basic_info.work_type,
-        work_hours: store.basic_info.work_hours
+        ...store.basic_info,
+        // 数値型の変換
+        daily_work_hours: Number(store.basic_info.daily_work_hours),
+        weekly_work_days: Number(store.basic_info.weekly_work_days)
       },
       disability_status: store.disability_status,
       considerations: store.considerations,
-      episode: store.episode,
       link_id: linkId.value,
       status: isDraft ? 'draft' : 'completed'
     }
 
-    // デバッグログを追加
-    console.log('Saving form data:', formData)
+    // エピソードを追加
+    formData.episode = store.episode
+
+    console.log('Saving form data:', formData) // デバッグ用
 
     const response = await $fetch('/api/save-user-case', {
       method: 'POST',
@@ -373,4 +374,20 @@ const handleEdit = () => {
   isUsed.value = false
   isEditable.value = true
 }
+
+// APIデータの取得
+const { data } = await useFetch<ApiResponse>('/api/get-link-info', {
+  query: { id: linkId }
+})
+
+// データ取得とログ出力を含むcomputedプロパティ
+const savedCase = computed(() => {
+  const result = data.value?.data?.savedCase
+  // データの中身を確認
+  console.log('Form received data:', {
+    savedCase: result,
+    basic_info: result?.basic_info
+  })
+  return result
+})
 </script>
