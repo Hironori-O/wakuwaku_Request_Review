@@ -68,7 +68,7 @@
             />
           </v-col>
           <v-col cols="12">
-            <v-select
+            <v-combobox
               v-model="store.disability_status.work_capability"
               label="作業能力"
               :items="workCapabilityOptions"
@@ -80,7 +80,7 @@
             />
           </v-col>
           <v-col cols="12">
-            <v-select
+            <v-combobox
               v-model="store.disability_status.work_performance"
               label="業務遂行能力"
               :items="workPerformanceOptions"

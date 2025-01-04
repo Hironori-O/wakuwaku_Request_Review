@@ -8,7 +8,7 @@
       <v-form ref="form">
         <v-row>
           <v-col cols="12">
-            <v-select
+            <v-combobox
               v-model="store.considerations.physical_environment"
               label="物理的環境"
               :items="physicalEnvironmentOptions"
@@ -20,7 +20,7 @@
             />
           </v-col>
           <v-col cols="12">
-            <v-select
+            <v-combobox
               v-model="store.considerations.work_considerations"
               label="作業上の配慮"
               :items="workConsiderationsOptions"
@@ -32,7 +32,7 @@
             />
           </v-col>
           <v-col cols="12">
-            <v-select
+            <v-combobox
               v-model="store.considerations.communication_support"
               label="コミュニケーション支援"
               :items="communicationSupportOptions"
@@ -44,7 +44,7 @@
             />
           </v-col>
           <v-col cols="12">
-            <v-select
+            <v-combobox
               v-model="store.considerations.human_support"
               label="人的支援"
               :items="humanSupportOptions"
@@ -56,7 +56,7 @@
             />
           </v-col>
           <v-col cols="12">
-            <v-select
+            <v-combobox
               v-model="store.considerations.health_safety"
               label="健康・安全管理"
               :items="healthSafetyOptions"
@@ -68,7 +68,7 @@
             />
           </v-col>
           <v-col cols="12">
-            <v-select
+            <v-combobox
               v-model="store.considerations.career_development"
               label="キャリア形成"
               :items="careerDevelopmentOptions"
@@ -80,7 +80,7 @@
             />
           </v-col>
           <v-col cols="12">
-            <v-select
+            <v-combobox
               v-model="store.considerations.mental_support"
               label="メンタルヘルス"
               :items="mentalSupportOptions"
