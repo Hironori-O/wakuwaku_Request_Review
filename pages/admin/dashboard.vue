@@ -235,7 +235,7 @@
 
 <script setup lang="ts">
 import { useSupabase } from '~/composables/useSupabase'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { onMounted, ref } from 'vue'
 
 // インターフェースの定義
@@ -256,8 +256,25 @@ interface UserLink {
   }>
 }
 
+// データの整形部分を修正
+interface ApiResponse {
+  id: string
+  email: string
+  status: string
+  editable: boolean
+  comment: string
+  created_at: string
+  updated_at: string
+  hashtags: string[]
+  user_cases?: Array<{
+    status: string
+    updated_at: string
+  }>
+}
+
 const supabase = useSupabase()
 const router = useRouter()
+const route = useRoute()
 
 // ボタンテキストの定義
 const cancelButtonText = 'キャンセル'
@@ -334,7 +351,7 @@ const headers = [
   }
 ]
 
-// ユーザー一覧��取得
+// ユーザー一覧取得
 const fetchUserList = async () => {
   loading.value = true
   try {
@@ -352,7 +369,7 @@ const fetchUserList = async () => {
     if (error) throw error
     
     // データの整形
-    userList.value = data.map(item => ({
+    userList.value = data.map((item: ApiResponse) => ({
       ...item,
       url: `${window.location.origin}/user/form?link=${item.id}`,
       status: item.user_cases?.[0]?.status || item.status || 'pending',
@@ -645,8 +662,22 @@ const handleLogout = async () => {
   }
 }
 
+// 認証チェック関数
+const checkAuth = async () => {
+  try {
+    const { data: { session }, error } = await supabase.auth.getSession()
+    if (error || !session) {
+      throw new Error('認証されていません')
+    }
+  } catch (error) {
+    console.error('Authentication error:', error)
+    router.push('/admin/login')
+  }
+}
+
 // 初期データの取得
 onMounted(async () => {
+  await checkAuth()
   await fetchUserList()
 })
 </script>

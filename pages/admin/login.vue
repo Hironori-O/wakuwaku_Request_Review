@@ -61,6 +61,10 @@
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { useSupabase } from '~/composables/useSupabase'
+
 const supabase = useSupabase()
 const router = useRouter()
 
@@ -99,36 +103,101 @@ const handleSubmit = async () => {
   loading.value = true
   try {
     if (isLogin.value) {
+      console.log('ログインを開始します')
+      
       // ログイン処理
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email: email.value,
         password: password.value
       })
 
-      if (error) throw error
+      console.log('Login attempt:', {
+        success: !error,
+        user: data?.user,
+        error: error
+      })
+
+      if (error) {
+        console.error('ログインエラー:', error)
+        throw error
+      }
+
+      if (!data.user) {
+        console.error('ユーザーデータがありません')
+        throw new Error('ログインに失敗しました')
+      }
+
+      // admin_usersテーブルの確認
+      const { data: adminUser, error: adminError } = await supabase
+        .from('admin_users')
+        .select()
+        .eq('auth_user_id', data.user.id)
+        .single()
+
+      if (adminError) {
+        console.error('Admin check error:', adminError)
+        throw new Error('管理者権限の確認に失敗しました')
+      }
+
+      if (!adminUser) {
+        throw new Error('管理者権限がありません')
+      }
+
+      console.log('Login successful:', {
+        userId: data.user.id,
+        email: data.user.email,
+        adminUser: adminUser
+      })
+
+      await router.push('/admin/dashboard')
     } else {
-      // 新規登録処理
-      const { error } = await supabase.auth.signUp({
+      console.log('新規登録を開始します')
+      
+      // 新規登録処理（認証のみ）
+      const { data, error } = await supabase.auth.signUp({
         email: email.value,
         password: password.value,
         options: {
+          emailRedirectTo: `${window.location.origin}/admin/confirm`,
           data: {
-            role: 'admin'
+            is_admin: true
           }
         }
       })
 
-      if (error) throw error
+      console.log('SignUp attempt:', {
+        success: !error,
+        user: data?.user,
+        error: error
+      })
+
+      if (error) {
+        console.error('認証エラー:', error)
+        throw error
+      }
+
+      if (!data.user) {
+        console.error('ユーザーデータがありません')
+        throw new Error('ユーザー登録に失敗しました')
+      }
+
+      console.log('Registration successful:', {
+        userId: data.user.id,
+        email: data.user.email
+      })
 
       showErrorMessage('確認メールを送信しました。メールを確認して登録を完了してください。')
       isLogin.value = true
-      return
     }
-
-    await router.push('/admin/dashboard')
   } catch (error) {
-    console.error('Authentication error:', error)
-    showErrorMessage(error instanceof Error ? error.message : 'エラーが発生しました')
+    console.error('Error:', error)
+    if (error instanceof Error) {
+      console.log('Error name:', error.name)
+      console.log('Error message:', error.message)
+      console.log('Error stack:', error.stack)
+    }
+    const errorMessage = error instanceof Error ? error.message : 'エラーが発生しました'
+    showErrorMessage(errorMessage)
   } finally {
     loading.value = false
   }
