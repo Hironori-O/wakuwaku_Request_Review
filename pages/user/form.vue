@@ -94,17 +94,41 @@
       >
         {{ errorMessage }}
       </v-snackbar>
+
+      <!-- ローディングオーバーレイ -->
+      <v-overlay
+        v-model="generating"
+        class="align-center justify-center"
+        persistent
+      >
+        <v-card
+          color="transparent"
+          class="d-flex flex-column align-center"
+          flat
+        >
+          <v-progress-circular
+            indeterminate
+            color="primary"
+            size="64"
+          />
+          <div class="text-h6 mt-4 white--text">
+            エピソードを生成中...
+          </div>
+        </v-card>
+      </v-overlay>
     </template>
   </v-container>
 </template>
 
 <script setup lang="ts">
+import { ref, computed, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import { useUserFormStore } from '~/stores/userForm'
 import BasicInfoForm from '~/components/user/BasicInfoForm.vue'
 import DisabilityStatusForm from '~/components/user/DisabilityStatusForm.vue'
 import ConsiderationsForm from '~/components/user/ConsiderationsForm.vue'
 import CaseViewer from '~/components/user/CaseViewer.vue'
-import type { CaseData, Hashtag } from '~/types/case'  // 型をインポート
+import type { CaseData, Hashtag } from '~/types/case'
 
 // APIレスポンスの型定義
 interface ApiResponse {
@@ -199,83 +223,35 @@ const checkEditable = async () => {
 
   try {
     console.log('Checking link:', linkId.value)
-    const response = await $fetch<ApiResponse>(`/api/get-link-info?link=${linkId.value}`)
-    
-    console.log('API response:', response)
-
-    if (!response.success) {
-      isEditable.value = false
-      errorMessage.value = response.error || 'リンク情報の取得に失敗しました'
-      showError.value = true
-      return
-    }
+    const response = await $fetch<ApiResponse>('/api/get-link-info', {
+      query: { id: linkId.value }
+    })
 
     const data = response.data
     if (!data) {
-      isEditable.value = false
-      errorMessage.value = 'リンク情報の取得に失敗しました'
-      showError.value = true
-      return
+      throw new Error('データの取得に失敗しました')
     }
 
-    // 編集可否の設定
-    isEditable.value = true // デフォルトで編集可能
-    if (data.isActive === false) {
-      isEditable.value = false // 明示的に無効化されている場合のみfalse
-      errorMessage.value = 'このリンクは無効化されています'
-      showError.value = true
-      return
-    }
-    
-    isUsed.value = data.isUsed || false
+    isEditable.value = data.isActive && !data.isUsed
+    isUsed.value = data.isUsed
+
+    // 保存済みのデータがある場合は読み込む
     if (data.savedCase) {
-      const savedBasicInfo = data.savedCase.basic_info || {}
-      
-      // デバッグログを追加
-      console.log('Full saved case data:', data.savedCase)
-      console.log('Saved basic info:', savedBasicInfo)
-      console.log('Current store state before patch:', store.$state)
-      
+      const { basic_info, disability_status, considerations, episode } = data.savedCase
       store.$patch({
         basic_info: {
-          person_name: savedBasicInfo.person_name || '',
-          company_name: savedBasicInfo.company_name || '',
-          address: savedBasicInfo.address || '',
-          phone: savedBasicInfo.phone || '',
-          position: savedBasicInfo.position || '',
-          writer_name: savedBasicInfo.writer_name || '',
-          relationship: savedBasicInfo.relationship || '',
-          work_type: savedBasicInfo.work_type || '',
-          work_hours: savedBasicInfo.work_hours || '',
-          hire_date: savedBasicInfo.hire_date || '',
-          department: savedBasicInfo.department || '',
-          daily_work_hours: savedBasicInfo.daily_work_hours || '',
-          weekly_work_days: savedBasicInfo.weekly_work_days || ''
+          ...basic_info,
+          daily_work_hours: Number(basic_info.daily_work_hours),
+          weekly_work_days: Number(basic_info.weekly_work_days)
         },
-        disability_status: {
-          ...store.disability_status,
-          ...(data.savedCase.disability_status || {})
-        },
-        considerations: {
-          ...store.considerations,
-          ...(data.savedCase.considerations || {})
-        },
-        episode: data.savedCase.episode || ''
+        disability_status,
+        considerations,
+        episode: episode || ''
       })
-
-      // デッチ後の状態を確認
-      console.log('Store state after patch:', store.$state)
     }
     if (data.hashtags) {
       hashtags.value = data.hashtags
     }
-
-    console.log('Link status:', {
-      linkId: linkId.value,
-      isEditable: isEditable.value,
-      isUsed: isUsed.value,
-      isActive: data.isActive
-    })
   } catch (e) {
     console.error('Error checking editable status:', e)
     isEditable.value = false
@@ -292,19 +268,11 @@ const handleSave = async (isDraft: boolean) => {
     return
   }
 
-  // デバッグログを追加
-  console.log('Current form data:', {
-    basic_info: store.basic_info,
-    disability_status: store.disability_status,
-    considerations: store.considerations,
-    episode: store.episode
-  })
-
   // 一時保存時のバリデーション
   if (!store.validateBasicInfo(isDraft)) {
     errorMessage.value = isDraft ? '少なくとも1つのフィールドを入力してください' : '必須項目を入力してください'
     showError.value = true
-    return  // 処理を中断
+    return
   }
 
   saving.value = true
@@ -312,22 +280,17 @@ const handleSave = async (isDraft: boolean) => {
     const formData = {
       basic_info: {
         ...store.basic_info,
-        // 数値型の変換
         daily_work_hours: Number(store.basic_info.daily_work_hours),
         weekly_work_days: Number(store.basic_info.weekly_work_days)
       },
       disability_status: store.disability_status,
       considerations: store.considerations,
       link_id: linkId.value,
-      status: isDraft ? 'draft' : 'completed'
+      status: isDraft ? 'draft' : 'completed',
+      episode: store.episode
     }
 
-    // エピソードを追加
-    formData.episode = store.episode
-
-    console.log('Saving form data:', formData) // デバッグ用
-
-    const response = await $fetch('/api/save-user-case', {
+    const response = await $fetch<ApiResponse>('/api/save-user-case', {
       method: 'POST',
       body: formData
     })
@@ -335,7 +298,6 @@ const handleSave = async (isDraft: boolean) => {
     if (response.success) {
       showSuccess.value = true
       successMessage.value = isDraft ? '一時保存しました' : '保存が完了しました'
-      // 保存成功後に編集可否を再チェック
       await checkEditable()
     } else {
       errorMessage.value = 'エラーが発生しました'
@@ -375,19 +337,19 @@ const handleEdit = () => {
   isEditable.value = true
 }
 
-// APIデータの取得
-const { data } = await useFetch<ApiResponse>('/api/get-link-info', {
-  query: { id: linkId }
-})
-
 // データ取得とログ出力を含むcomputedプロパティ
 const savedCase = computed(() => {
-  const result = data.value?.data?.savedCase
-  // データの中身を確認
-  console.log('Form received data:', {
-    savedCase: result,
-    basic_info: result?.basic_info
-  })
-  return result
+  if (!linkId.value) return null
+  return {
+    id: linkId.value,
+    basic_info: {
+      ...store.basic_info,
+      daily_work_hours: String(store.basic_info.daily_work_hours),
+      weekly_work_days: String(store.basic_info.weekly_work_days)
+    },
+    disability_status: store.disability_status,
+    considerations: store.considerations,
+    episode: store.episode
+  } as CaseData
 })
 </script>
