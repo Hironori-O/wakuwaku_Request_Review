@@ -1,13 +1,15 @@
 import { createClient } from '@supabase/supabase-js'
 import type { Database } from '@/types/supabase'
+import type { SupabaseClient } from '@supabase/supabase-js'
 
 // クライアントサイド用のフック
 export const useSupabase = () => {
-  const { $supabase } = useNuxtApp()
+  const nuxtApp = useNuxtApp()
+  const { $supabase } = nuxtApp
   if (!$supabase) {
     throw new Error('Supabase client is not initialized')
   }
-  return $supabase
+  return $supabase as SupabaseClient<Database>
 }
 
 // サーバーサイド用のクライアント
@@ -21,8 +23,8 @@ export const useSupabaseService = () => {
 
   try {
     return createClient<Database>(
-      config.public.supabaseUrl,
-      config.supabaseServiceKey,
+      config.public.supabaseUrl as string,
+      config.supabaseServiceKey as string,
       {
         auth: {
           persistSession: false,

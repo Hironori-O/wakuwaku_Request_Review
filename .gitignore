@@ -37,3 +37,12 @@ yarn-error.log*
 *.sw?
 .env
 .env.development
+
+# Temporary files
+temp_*
+.~lock.*
+*.tmp
+
+# Generated files
+*.pdf
+!template.pdf

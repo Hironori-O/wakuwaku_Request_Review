@@ -248,136 +248,103 @@ interface UserLink {
   comment: string
   created_at: string
   updated_at: string
-  last_updated?: string
-  hashtags: string[]
-  user_cases?: Array<{
-    status: string
-    updated_at: string
-  }>
 }
 
-// データの整形部分を修正
-interface ApiResponse {
-  id: string
-  email: string
-  status: string
-  editable: boolean
-  comment: string
-  created_at: string
-  updated_at: string
-  hashtags: string[]
-  user_cases?: Array<{
-    status: string
-    updated_at: string
-  }>
+type DataTableHeader = {
+  title: string
+  key: keyof UserLink | 'actions'
+  align?: 'start' | 'center' | 'end'
+  width?: string
+  sortable?: boolean
 }
 
-const supabase = useSupabase()
 const router = useRouter()
 const route = useRoute()
+const supabase = useSupabase()
 
-// ボタンテキストの定義
-const cancelButtonText = 'キャンセル'
-const deleteButtonText = '削除'
-
-// 状態管理（型定義を追加）
+// 状態管理
 const loading = ref(false)
-const search = ref('')
 const userList = ref<UserLink[]>([])
+const search = ref('')
 const showAddUserDialog = ref(false)
 const showUrlDialog = ref(false)
+const showDeleteDialog = ref(false)
 const addingUser = ref(false)
-const generatedUrl = ref('')
+const copying = ref(false)
+const copyingItemId = ref<string | null>(null)
+const deleting = ref(false)
 const showSnackbar = ref(false)
 const snackbarText = ref('')
 const snackbarColor = ref('success')
-const form = ref()
-const showDeleteDialog = ref(false)
+const generatedUrl = ref('')
 const deleteTarget = ref<UserLink | null>(null)
-const deleting = ref(false)
-const copyingItemId = ref<string | null>(null)
-const copying = ref(false)
-const urlInput = ref<any>(null)
+const form = ref()
+const urlInput = ref()
 
-// 新規ユーザー情報
 const newUser = ref({
   email: '',
   comment: ''
 })
 
+// 削除確認ダイアログのボタンテキスト
+const cancelButtonText = '取り消し'
+const deleteButtonText = '削除'
+
 // テーブルヘッダー
-const headers = [
-  { 
-    title: 'メールアドレス',
-    key: 'email',
-    sortable: true,
-    align: 'start' as const,
-    width: '25%'
-  },
-  {
-    title: 'URL',
-    key: 'url',
-    sortable: false,
-    align: 'start' as const,
-    width: '35%'
-  },
-  {
-    title: 'ステータス',
-    key: 'status',
-    sortable: true,
-    align: 'center' as const,
-    width: '10%'
-  },
-  {
-    title: '編集可能',
-    key: 'editable',
-    sortable: true,
-    align: 'center' as const,
-    width: '10%'
-  },
-  {
-    title: 'コメント',
-    key: 'comment',
-    sortable: false,
-    align: 'start' as const,
-    width: '15%'
-  },
-  {
-    title: '操作',
-    key: 'actions',
-    sortable: false,
-    align: 'center' as const,
-    width: '5%'
-  }
+const headers: DataTableHeader[] = [
+  { title: 'メールアドレス', key: 'email', align: 'start' },
+  { title: 'URL', key: 'url', width: '300px', align: 'start' },
+  { title: '状態', key: 'status', align: 'center' },
+  { title: '編集可能', key: 'editable', align: 'center' },
+  { title: 'コメント', key: 'comment', align: 'start' },
+  { title: '操作', key: 'actions', align: 'center', sortable: false }
 ]
 
-// ユーザー一覧取得
+// ステタス表示用の関数
+const getStatusColor = (status: string) => {
+  switch (status) {
+    case 'completed':
+      return 'success'
+    case 'draft':
+      return 'warning'
+    case 'pending':
+      return 'info'
+    default:
+      return 'grey'
+  }
+}
+
+const getStatusText = (status: string) => {
+  switch (status) {
+    case 'completed':
+      return '完了'
+    case 'draft':
+      return '下書き'
+    case 'pending':
+      return '未回答'
+    default:
+      return '不明'
+  }
+}
+
+// ユーザー一覧の取得
 const fetchUserList = async () => {
   loading.value = true
   try {
     const { data, error } = await supabase
       .from('user_links')
-      .select(`
-        *,
-        user_cases (
-          status,
-          updated_at
-        )
-      `)
+      .select('*')
       .order('created_at', { ascending: false })
 
     if (error) throw error
-    
-    // データの整形
-    userList.value = data.map((item: ApiResponse) => ({
+
+    userList.value = data.map(item => ({
       ...item,
-      url: `${window.location.origin}/user/form?link=${item.id}`,
-      status: item.user_cases?.[0]?.status || item.status || 'pending',
-      last_updated: item.user_cases?.[0]?.updated_at || item.updated_at
+      url: `${window.location.origin}/user/${item.id}`
     }))
   } catch (error) {
     console.error('Error fetching user list:', error)
-    showError('ユーザー一覧の取得に失敗しました')
+    showSnackbarMessage('ユーザー一覧の取得に失敗しました', 'error')
   } finally {
     loading.value = false
   }
@@ -391,157 +358,49 @@ const handleAddUser = async () => {
 
   addingUser.value = true
   try {
-    console.log('Adding new user:', newUser.value)
-
-    // URLの生成と保存
     const { data, error } = await supabase
       .from('user_links')
-      .insert([{
-        email: newUser.value.email,
-        comment: newUser.value.comment || '',
-        editable: true,
-        status: 'pending',
-        hashtags: [],
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      }])
+      .insert([
+        {
+          email: newUser.value.email,
+          comment: newUser.value.comment,
+          editable: true
+        }
+      ])
       .select()
       .single()
 
-    if (error) {
-      console.error('Supabase error:', error)
-      throw error
-    }
+    if (error) throw error
 
-    if (!data) {
-      throw new Error('データの保存に失敗しました')
-    }
-
-    console.log('Saved user data:', data)
-
-    // 生成されたURLの表示
-    generatedUrl.value = `${window.location.origin}/user/form?link=${data.id}`
     showAddUserDialog.value = false
+    newUser.value = { email: '', comment: '' }
+    showSnackbarMessage('ユーザーを追加しました')
+    
+    // URLの表示
+    generatedUrl.value = `${window.location.origin}/user/${data.id}`
     showUrlDialog.value = true
     
-    // 一覧の更新
     await fetchUserList()
-    
-    // フォームのリセット
-    newUser.value = { email: '', comment: '' }
-    
-    showSuccess('ユーザーを追加しました')
   } catch (error) {
     console.error('Error adding user:', error)
-    showError(error instanceof Error ? error.message : 'ユーザーの追加に失敗しました')
+    showSnackbarMessage('ユーザーの追加に失敗しました', 'error')
   } finally {
     addingUser.value = false
   }
 }
 
-// テキスト選択用の関数
-const selectUrlText = () => {
-  const input = urlInput.value?.$el.querySelector('input')
-  if (input) {
-    input.select()
-  }
-}
+// URLのコピー
+const handleCopyUrl = async (url: string) => {
+  const itemId = url.split('/').pop()
+  if (!itemId) return
 
-// モーダル用のコピー機能
-const copyToClipboard = async () => {
-  if (!generatedUrl.value) {
-    showError('URLが指定されていません')
-    return
-  }
-
-  copying.value = true
-  try {
-    // まずClipboard APIを試す
-    try {
-      await navigator.clipboard.writeText(generatedUrl.value)
-      showSuccess('URLをコピーしました')
-      return
-    } catch (clipboardError) {
-      console.warn('Clipboard API failed:', clipboardError)
-    }
-
-    // フォールバック: input要素を使用
-    const input = urlInput.value?.$el.querySelector('input')
-    if (!input) {
-      throw new Error('入力要素が見つかりません')
-    }
-
-    // テキストを選択してコピー
-    input.select()
-    const success = document.execCommand('copy')
-    
-    if (success) {
-      showSuccess('URLをコピーしました')
-    } else {
-      throw new Error('コピーに失敗しました')
-    }
-  } catch (error) {
-    console.error('Copy error:', error)
-    showError(error instanceof Error ? error.message : 'URLのコピーに失敗しました')
-  } finally {
-    copying.value = false
-  }
-}
-
-// データテーブル用のコピー機能
-const handleCopyUrl = async (url: string): Promise<void> => {
-  if (!url) {
-    showError('URLが指定されていません')
-    return
-  }
-
-  const item = userList.value.find((i: UserLink) => i.url === url)
-  if (item) {
-    copyingItemId.value = item.id
-  }
-
+  copyingItemId.value = itemId
   try {
     await navigator.clipboard.writeText(url)
-    showSuccess('URLをコピーしました')
-  } catch (clipboardError) {
-    console.warn('Clipboard API failed:', clipboardError)
-    
-    // フォールバック: テキストエリアを使用
-    const textArea = document.createElement('textarea')
-    textArea.value = url
-    
-    // スタイル設定
-    Object.assign(textArea.style, {
-      position: 'fixed',
-      top: '0',
-      left: '0',
-      width: '2em',
-      height: '2em',
-      padding: '0',
-      border: 'none',
-      outline: 'none',
-      boxShadow: 'none',
-      background: 'transparent',
-      opacity: '0'
-    })
-    
-    document.body.appendChild(textArea)
-    textArea.focus()
-    textArea.select()
-    
-    try {
-      const success = document.execCommand('copy')
-      if (success) {
-        showSuccess('URLをコピーしました')
-      } else {
-        throw new Error('コピーに失敗しました')
-      }
-    } catch (error) {
-      console.error('Copy error:', error)
-      showError('URLのコピーに失敗しました')
-    } finally {
-      document.body.removeChild(textArea)
-    }
+    showSnackbarMessage('URLをコピーしました')
+  } catch (error) {
+    console.error('Error copying URL:', error)
+    showSnackbarMessage('URLのコピーに失敗しました', 'error')
   } finally {
     copyingItemId.value = null
   }
@@ -550,76 +409,23 @@ const handleCopyUrl = async (url: string): Promise<void> => {
 // 編集可否の更新
 const updateEditable = async (item: UserLink) => {
   try {
-    loading.value = true
     const { error } = await supabase
       .from('user_links')
-      .update({ 
-        editable: item.editable,
-        updated_at: new Date().toISOString()
-      })
+      .update({ editable: item.editable })
       .eq('id', item.id)
 
-    if (error) {
-      throw error
-    }
+    if (error) throw error
 
-    showSuccess(`編集${item.editable ? '可能' : '不可'}に設定しました`)
-    
-    // 一覧を更新して最新の状態を反映
-    await fetchUserList()
+    showSnackbarMessage('設定を更新しました')
   } catch (error) {
     console.error('Error updating editable:', error)
-    showError('更新に失敗しました')
-    // エラーの場合は状態を元に戻す
-    item.editable = !item.editable
-  } finally {
-    loading.value = false
+    showSnackbarMessage('設定の更新に失敗しました', 'error')
+    item.editable = !item.editable // 元に戻す
   }
 }
 
-// ステータスの表示テキストを取得
-const getStatusText = (status: string): string => {
-  switch (status) {
-    case 'completed':
-      return '回答済み'
-    case 'draft':
-      return '回答中'
-    case 'pending':
-      return '未回答'
-    default:
-      return '不明'
-  }
-}
-
-// ステータスの色を取得
-const getStatusColor = (status: string): string => {
-  switch (status) {
-    case 'completed':
-      return 'success'
-    case 'draft':
-      return 'warning'
-    case 'pending':
-      return 'error'
-    default:
-      return 'grey'
-  }
-}
-
-// スナックバー表示用ヘルパー関数
-const showSuccess = (text: string): void => {
-  snackbarColor.value = 'success'
-  snackbarText.value = text
-  showSnackbar.value = true
-}
-
-const showError = (text: string): void => {
-  snackbarColor.value = 'error'
-  snackbarText.value = text
-  showSnackbar.value = true
-}
-
-// 削除確認ダイアログを表示
-const confirmDelete = (item: UserLink): void => {
+// 削除確認
+const confirmDelete = (item: UserLink) => {
   deleteTarget.value = item
   showDeleteDialog.value = true
 }
@@ -627,7 +433,7 @@ const confirmDelete = (item: UserLink): void => {
 // 削除実行
 const handleDelete = async () => {
   if (!deleteTarget.value) return
-  
+
   deleting.value = true
   try {
     const { error } = await supabase
@@ -637,47 +443,65 @@ const handleDelete = async () => {
 
     if (error) throw error
 
-    // 一覧を更新
-    await fetchUserList()
-    showSuccess('ユーザーを削除しました')
     showDeleteDialog.value = false
-    deleteTarget.value = null
+    showSnackbarMessage('ユーザーを削除しました')
+    await fetchUserList()
   } catch (error) {
-    console.error('Delete error:', error)
-    showError('削除に失敗しました')
+    console.error('Error deleting user:', error)
+    showSnackbarMessage('ユーザーの削除に失敗しました', 'error')
   } finally {
     deleting.value = false
   }
 }
 
-// ログアウト処理
+// ログアウト
 const handleLogout = async () => {
   try {
     const { error } = await supabase.auth.signOut()
     if (error) throw error
-    router.push('/admin/login')
+    await router.push('/admin/login')
   } catch (error) {
-    console.error('Logout error:', error)
-    showError('ログアウトに失敗しました')
+    console.error('Error signing out:', error)
+    showSnackbarMessage('ログアウトに失敗しました', 'error')
   }
 }
 
-// 認証チェック関数
-const checkAuth = async () => {
+// スナックバーメッセージの表示
+const showSnackbarMessage = (message: string, color: string = 'success') => {
+  snackbarText.value = message
+  snackbarColor.value = color
+  showSnackbar.value = true
+}
+
+// URLのテキスト選択
+const selectUrlText = () => {
+  if (urlInput.value?.$el) {
+    const input = urlInput.value.$el.querySelector('input')
+    input?.select()
+  }
+}
+
+// クリップボードにコピー
+const copyToClipboard = async () => {
+  copying.value = true
   try {
-    const { data: { session }, error } = await supabase.auth.getSession()
-    if (error || !session) {
-      throw new Error('認証されていません')
-    }
+    await navigator.clipboard.writeText(generatedUrl.value)
+    showSnackbarMessage('URLをコピーしました')
   } catch (error) {
-    console.error('Authentication error:', error)
-    router.push('/admin/login')
+    console.error('Error copying to clipboard:', error)
+    showSnackbarMessage('URLのコピーに失敗しました', 'error')
+  } finally {
+    copying.value = false
   }
 }
 
 // 初期データの取得
 onMounted(async () => {
-  await checkAuth()
   await fetchUserList()
+})
+
+// ページタイトルの設定
+useHead({
+  title: '管理者ダッシュボード'
 })
 </script>

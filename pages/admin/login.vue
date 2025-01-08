@@ -61,12 +61,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
-import { useSupabase } from '~/composables/useSupabase'
-
-const supabase = useSupabase()
 const router = useRouter()
+const supabase = useSupabase()
 
 const isLogin = ref(true)
 const email = ref('')
@@ -202,4 +198,9 @@ const handleSubmit = async () => {
     loading.value = false
   }
 }
+
+// ページタイトルの設定
+useHead({
+  title: isLogin.value ? '管理者ログイン' : '管理者登録'
+})
 </script> 

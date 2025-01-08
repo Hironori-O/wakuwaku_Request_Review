@@ -2,18 +2,21 @@
   "compilerOptions": {
     "target": "esnext",
     "module": "esnext",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "strict": true,
     "jsx": "preserve",
     "skipLibCheck": true,
     "types": [
       "@types/node",
-      "nuxt"
+      "nuxt",
+      "@nuxt/types"
     ],
     "baseUrl": ".",
     "paths": {
       "@/*": ["./*"],
-      "~/*": ["./*"]
+      "~/*": ["./*"],
+      "#imports": ["./.nuxt/types/imports"],
+      "#app": ["./.nuxt/types/app"]
     },
     "allowJs": true,
     "resolveJsonModule": true,

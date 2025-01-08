@@ -77,11 +77,9 @@
 </template>
 
 <script setup lang="ts">
-import { useSupabase } from '~/composables/useSupabase'
-
-const { supabase } = useSupabase()
 const router = useRouter()
 const route = useRoute()
+const supabase = useSupabase()
 
 const form = ref()
 const email = ref('')

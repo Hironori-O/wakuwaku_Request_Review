@@ -8,14 +8,13 @@ interface Hashtag {
   admin_id: string
 }
 
-interface UserForm {
+interface UserCase {
   id: string
-  company_info: any
-  department_info: any
-  employee_info: any
-  creator_info: any
+  basic_info: any
+  disability_status: any
+  considerations: any
   selected_hashtags: string[]
-  generated_episode: string | null
+  episode: string | null
   created_at: string
   updated_at: string
 }
@@ -24,8 +23,8 @@ interface UserForm {
 async function getSupabaseClient() {
   const config = useRuntimeConfig()
   const supabase = createClient(
-    config.public.supabaseUrl,
-    config.public.supabaseKey
+    config.public.supabaseUrl as string,
+    config.public.supabaseKey as string
   )
 
   // 現在のセッションを取得
@@ -34,8 +33,8 @@ async function getSupabaseClient() {
   // セッションがある場合は認証トークンを設定
   if (session) {
     return createClient(
-      config.public.supabaseUrl,
-      config.public.supabaseKey,
+      config.public.supabaseUrl as string,
+      config.public.supabaseKey as string,
       {
         global: {
           headers: {
@@ -53,7 +52,7 @@ export const useHashtagStore = defineStore('hashtags', {
   state: () => ({
     hashtags: [] as Hashtag[],
     selectedHashtags: [] as string[],
-    currentFormId: null as string | null,
+    currentCaseId: null as string | null,
     currentAdminId: null as string | null
   }),
 
@@ -104,52 +103,52 @@ export const useHashtagStore = defineStore('hashtags', {
       }
     },
 
-    async loadUserFormHashtags(formId: string) {
+    async loadUserCaseHashtags(caseId: string) {
       try {
         const supabase = await getSupabaseClient()
         const { data, error } = await supabase
-          .from('user_forms')
+          .from('user_cases')
           .select('selected_hashtags')
-          .eq('id', formId)
+          .eq('id', caseId)
           .single()
 
         if (error) {
-          console.error('Error loading user form hashtags:', error)
+          console.error('Error loading user case hashtags:', error)
           throw error
         }
 
         if (data) {
           this.selectedHashtags = data.selected_hashtags || []
-          this.currentFormId = formId
+          this.currentCaseId = caseId
         }
       } catch (error) {
-        console.error('Error in loadUserFormHashtags:', error)
+        console.error('Error in loadUserCaseHashtags:', error)
         throw error
       }
     },
 
-    async updateUserFormHashtags() {
-      if (!this.currentFormId) {
-        console.error('No form ID set')
+    async updateUserCaseHashtags() {
+      if (!this.currentCaseId) {
+        console.error('No case ID set')
         return
       }
 
       try {
         const supabase = await getSupabaseClient()
         const { error } = await supabase
-          .from('user_forms')
+          .from('user_cases')
           .update({
             selected_hashtags: this.selectedHashtags,
             updated_at: new Date().toISOString()
           })
-          .eq('id', this.currentFormId)
+          .eq('id', this.currentCaseId)
 
         if (error) {
-          console.error('Error updating user form hashtags:', error)
+          console.error('Error updating user case hashtags:', error)
           throw error
         }
       } catch (error) {
-        console.error('Error in updateUserFormHashtags:', error)
+        console.error('Error in updateUserCaseHashtags:', error)
         throw error
       }
     },
@@ -244,21 +243,10 @@ export const useHashtagStore = defineStore('hashtags', {
         this.selectedHashtags.splice(index, 1)
       }
       
-      // 選択状態が変更されたら自動的にuser_formsを更新
-      if (this.currentFormId) {
-        this.updateUserFormHashtags()
+      // 選択状態が変更されたら自動的にuser_casesを更新
+      if (this.currentCaseId) {
+        this.updateUserCaseHashtags()
       }
-    },
-
-    clearSelection() {
-      this.selectedHashtags = []
-      this.currentFormId = null
-    }
-  },
-
-  getters: {
-    getSelectedHashtags(): Hashtag[] {
-      return this.hashtags.filter(tag => this.selectedHashtags.includes(tag.id))
     }
   }
 })

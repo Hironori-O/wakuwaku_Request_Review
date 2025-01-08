@@ -143,6 +143,50 @@ interface ApiResponse {
 }
 
 const store = useUserFormStore()
+
+// storeの初期化
+const initializeStore = () => {
+  store.$patch({
+    basic_info: {
+      person_name: '',
+      company_name: '',
+      address: '',
+      phone: '',
+      position: '',
+      writer_name: '',
+      relationship: '',
+      work_type: '',
+      work_hours: '',
+      hire_date: '',
+      department: '',
+      daily_work_hours: 8,
+      weekly_work_days: 5,
+    },
+    disability_status: {
+      lateness: '',
+      early_leaving: '',
+      sudden_absence: '',
+      leaving_during_work: '',
+      communication: '',
+      work_capability: [],
+      work_performance: []
+    },
+    considerations: {
+      physical_environment: [],
+      work_considerations: [],
+      communication_support: [],
+      human_support: [],
+      health_safety: [],
+      career_development: [],
+      mental_support: []
+    },
+    episode: ''
+  })
+}
+
+// 初期化を即時実行
+initializeStore()
+
 const saving = ref(false)
 const showSuccess = ref(false)
 const showError = ref(false)
@@ -215,9 +259,8 @@ const isFormValid = computed(() => {
 // 編集可否のチェック
 const checkEditable = async () => {
   if (!linkId.value) {
-    isEditable.value = false
-    errorMessage.value = 'リンクIDが指定されていません。URLを確認してください。'
-    showError.value = true
+    // リンクIDがない場合は新規作成モードとして扱う
+    isEditable.value = true
     return
   }
 
@@ -244,18 +287,30 @@ const checkEditable = async () => {
           daily_work_hours: Number(basic_info.daily_work_hours),
           weekly_work_days: Number(basic_info.weekly_work_days)
         },
-        disability_status,
-        considerations,
+        disability_status: disability_status || {
+          lateness: '',
+          early_leaving: '',
+          sudden_absence: '',
+          leaving_during_work: '',
+          communication: '',
+          work_capability: [],
+          work_performance: []
+        },
+        considerations: considerations || {
+          physical_environment: [],
+          work_considerations: [],
+          communication_support: [],
+          human_support: [],
+          health_safety: [],
+          career_development: [],
+          mental_support: []
+        },
         episode: episode || ''
       })
     }
-    if (data.hashtags) {
-      hashtags.value = data.hashtags
-    }
-  } catch (e) {
-    console.error('Error checking editable status:', e)
-    isEditable.value = false
-    errorMessage.value = e instanceof Error ? e.message : '編集権限の確認に失敗しました'
+  } catch (error) {
+    console.error('Error checking link:', error)
+    errorMessage.value = error instanceof Error ? error.message : 'エラーが発生しました'
     showError.value = true
   }
 }
@@ -324,10 +379,8 @@ const handleGenerateEpisode = async () => {
   }
 }
 
-// 初期データの取得
+// 初期化処理
 onMounted(async () => {
-  console.log('Current URL:', window.location.href)
-  console.log('Route query:', route.query)
   await checkEditable()
 })
 

@@ -33,9 +33,6 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { useSupabase } from '~/composables/useSupabase'
-
 const supabase = useSupabase()
 const loading = ref(true)
 const error = ref('')
@@ -97,5 +94,10 @@ onMounted(async () => {
   } finally {
     loading.value = false
   }
+})
+
+// ページタイトルの設定
+useHead({
+  title: '管理者登録の確認'
 })
 </script> 
