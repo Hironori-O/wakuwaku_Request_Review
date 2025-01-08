@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>就労状況に関する第三者からの申立書</title>
+    <style>
+        @font-face {
+            font-family: 'MS Mincho';
+            src: local('MS Mincho');
+        }
+        body {
+            font-family: 'MS Mincho', serif;
+            margin: 40px;
+            line-height: 1.8;
+            font-size: 12pt;
+        }
+        .title {
+            text-align: center;
+            font-size: 16pt;
+            font-weight: bold;
+            margin-bottom: 30px;
+        }
+        .content {
+            text-indent: 1em;
+            margin-bottom: 20px;
+        }
+        .employment-info {
+            margin: 20px 0;
+            padding-left: 1em;
+        }
+        .employment-item {
+            margin: 10px 0;
+            display: flex;
+            align-items: baseline;
+        }
+        .employment-item:before {
+            content: "□";
+            margin-right: 0.5em;
+        }
+        .work-details {
+            margin: 20px 0;
+        }
+        .episode {
+            margin: 20px 0;
+            white-space: pre-wrap;
+        }
+        .signature {
+            margin-top: 40px;
+        }
+        .date {
+            margin-bottom: 10px;
+            display: flex;
+            align-items: baseline;
+            gap: 5px;
+        }
+        .sign-item {
+            margin: 5px 0;
+            display: flex;
+            align-items: baseline;
+            gap: 5px;
+        }
+        .sign-item:before {
+            content: "事業所名：";
+            white-space: nowrap;
+        }
+        .sign-item.address:before {
+            content: "事業所所在地：";
+        }
+        .sign-item.name:before {
+            content: "申立者氏名：";
+        }
+        .underline {
+            border-bottom: 1px solid black;
+            padding-bottom: 2px;
+            min-width: 200px;
+        }
+    </style>
+</head>
+<body>
+    <div class="title">就労状況に関する第三者からの申立書</div>
+
+    <div class="content">
+        私（申立者）は、{{company_name}} {{department}}の{{position}}を務めており、請求人である
+        {{applicant_name}}さんの直属の上司にあたります。障害年金の請求人{{applicant_name}}さんの就労状況
+        について熟知していますので、以下申し立てます。
+    </div>
+
+    <div class="employment-info">
+        <div class="employment-item">
+            入社日： {{join_year}}年 {{join_month}}月 {{join_day}}日
+        </div>
+        <div class="employment-item">
+            仕事の頻度：1日{{work_hours}}時間、週に{{work_days}}日勤務
+        </div>
+        <div class="employment-item">
+            仕事の内容（具体的な業務内容）：
+        </div>
+    </div>
+
+    <div class="work-details">
+        入社当初は○○などの業務を担当していましたが、令和○年○月より簡単なPC操作やメモ等な体力的、精神的負荷のかからない業務を担当させております。
+    </div>
+
+    <div class="work-details">
+        職場での様子・配慮や支援の状況・障害に関する具体的なエピソード等
+    </div>
+
+    <div class="episode">{{episodes}}</div>
+
+    <div class="signature">
+        <div class="date">
+            令和 {{sign_year}}年 {{sign_month}}月 {{sign_day}}日
+        </div>
+        <div class="sign-item">
+            <span class="underline">{{sign_company}}</span>
+        </div>
+        <div class="sign-item address">
+            <span class="underline">{{sign_address}}</span>
+        </div>
+        <div class="sign-item name">
+            <span class="underline">{{sign_name}}</span> ㊞
+        </div>
+    </div>
+</body>
+</html> 
