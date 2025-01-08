@@ -1,0 +1,31 @@
+name: Windows Environment Test
+
+on:
+  push:
+    branches: [ for-windows ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test-windows:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '18'
+
+    - name: Install dependencies
+      run: |
+        npm install
+
+    - name: Build application
+      run: |
+        npm run build
+
+    - name: Test application
+      run: |
+        npm run preview 
