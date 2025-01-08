@@ -3,11 +3,12 @@ import PizZip from 'pizzip'
 import Docxtemplater from 'docxtemplater'
 import { readFileSync, writeFileSync } from 'fs'
 import { promises as fs } from 'fs'
-import { resolve } from 'path'
+import { resolve, join } from 'path'
 import { fileURLToPath } from 'url'
 import { dirname } from 'path'
 import puppeteer from 'puppeteer'
 import Handlebars from 'handlebars'
+import os from 'os'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
@@ -116,7 +117,7 @@ export default defineEventHandler(async (event) => {
 async function generatePdfFromData(formData: FormData): Promise<Uint8Array> {
   try {
     // HTMLテンプレートの読み込み
-    const templatePath = resolve(process.cwd(), 'public/templates/case-report.html')
+    const templatePath = join(process.cwd(), 'public', 'templates', 'case-report.html')
     const templateHtml = readFileSync(templatePath, 'utf-8')
     
     // Handlebarsテンプレートの準備
@@ -157,21 +158,28 @@ async function generatePdfFromData(formData: FormData): Promise<Uint8Array> {
     // HTMLの生成
     const html = template(templateData)
     
-    // 一時HTMLファイルとして保存
-    const tempHtmlPath = resolve(process.cwd(), `temp_${Date.now()}.html`)
+    // 一時HTMLファイルとして保存（OSに応じたtempディレクトリを使用）
+    const tempDir = os.tmpdir()
+    const tempHtmlPath = join(tempDir, `temp_${Date.now()}.html`)
     writeFileSync(tempHtmlPath, html)
     
-    // Puppeteerの起動
+    // Puppeteerの起動（OS別の設定）
+    const isWindows = os.platform() === 'win32'
     const browser = await puppeteer.launch({
       headless: true,
-      args: ['--no-sandbox']
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        ...(isWindows ? ['--disable-gpu'] : [])
+      ]
     })
     
     try {
       const page = await browser.newPage()
       
-      // HTMLファイルを読み込み
-      await page.goto(`file://${tempHtmlPath}`, {
+      // HTMLファイルを読み込み（ファイルURLをOSに応じて生成）
+      const fileUrl = `file://${tempHtmlPath.replace(/\\/g, '/')}`
+      await page.goto(fileUrl, {
         waitUntil: 'networkidle0'
       })
       

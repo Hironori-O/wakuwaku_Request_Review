@@ -17,6 +17,29 @@ npm install
 pnpm install
 ```
 
+### Windows環境でのセットアップ
+
+Windows環境で開発を行う場合、以下の追加手順が必要です：
+
+1. Node.jsのインストール
+   - [Node.js公式サイト](https://nodejs.org/)から最新のLTS版をダウンロード
+   - インストール時に「Automatically install the necessary tools」オプションを選択
+
+2. 必要なフォントの確認
+   - MS明朝フォントがインストールされていることを確認
+   - コントロールパネル > フォントで確認可能
+
+3. 環境変数の設定
+   - `.env.example`をコピーして`.env`を作成
+   - 必要な環境変数を設定
+   ```bash
+   copy .env.example .env
+   ```
+
+4. Puppeteerの設定
+   - Windows環境では追加の設定が自動的に適用されます
+   - Chrome/Chromiumが必要な場合は自動的にダウンロードされます
+
 ## Development Server
 
 Start the development server on http://localhost:3000
@@ -57,7 +80,11 @@ Check out the [deployment documentation](https://nuxt.com/docs/getting-started/d
 
 1. `.env.example`をコピーして`.env`を作成：
 ```bash
+# Unix系の場合
 cp .env.example .env
+
+# Windowsの場合
+copy .env.example .env
 ```
 
 2. `.env`に必要な環境変数を設定

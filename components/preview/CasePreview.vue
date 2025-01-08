@@ -276,7 +276,7 @@ const handleEpisodeEdit = (e: Event) => {
 }
 
 .preview-content {
-  font-family: 'MS Mincho', serif;
+  font-family: 'MS Mincho', 'ＭＳ 明朝', serif;
   line-height: 1.8;
   font-size: 11pt;
   height: 100%;
