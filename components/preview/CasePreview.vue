@@ -181,8 +181,12 @@ const handleGeneratePdf = async (e: Event) => {
     const pageHeight = 297 // A4の高さ
     const imgHeight = (canvas.height * imgWidth) / canvas.width
 
-    // 最初のページを追加
-    if (imgHeight <= pageHeight) {
+    // 余白を考慮した実際のコンテンツ高さを計算
+    const contentHeight = element.scrollHeight * (imgWidth / element.offsetWidth)
+    const marginHeight = 40 // 上下マージン20mmずつ
+
+    // コンテンツが1ページに収まるかチェック（マージンを考慮）
+    if (contentHeight + marginHeight <= pageHeight) {
       // 1ページに収まる場合
       pdf.addImage(
         canvas.toDataURL('image/jpeg', 1.0),
@@ -201,7 +205,6 @@ const handleGeneratePdf = async (e: Event) => {
       let page = 0
 
       while (heightLeft > 0) {
-        // 現在のページにコンテンツを追加
         pdf.addImage(
           canvas.toDataURL('image/jpeg', 1.0),
           'JPEG',
@@ -215,11 +218,10 @@ const handleGeneratePdf = async (e: Event) => {
 
         heightLeft -= pageHeight
         position += pageHeight
-        page++
 
-        // まだコンテンツが残っている場合は新しいページを追加
-        if (heightLeft > 0) {
+        if (heightLeft > 10) { // 余白を考慮
           pdf.addPage()
+          page++
         }
       }
     }
