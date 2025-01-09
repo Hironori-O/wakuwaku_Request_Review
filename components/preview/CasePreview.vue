@@ -278,7 +278,7 @@ const handleEpisodeEdit = (e: Event) => {
 .preview-content {
   font-family: 'MS Mincho', 'ＭＳ 明朝', serif;
   line-height: 1.8;
-  font-size: 11pt;
+  font-size: 9pt;
   height: 100%;
   outline: none;
   box-sizing: border-box;
@@ -296,15 +296,14 @@ const handleEpisodeEdit = (e: Event) => {
 .content {
   text-indent: 1em;
   line-height: 1.8;
-  margin-bottom: 8mm;
 }
 
 .employment-info {
-  margin: 8mm 0;
+  margin: 2mm 0;
 }
 
 .employment-item {
-  margin: 4mm 0;
+  margin: 2mm 0;
   display: flex;
   align-items: baseline;
   padding-left: 2em;
@@ -318,19 +317,19 @@ const handleEpisodeEdit = (e: Event) => {
 }
 
 .work-details {
-  margin: 6mm 0 4mm;
+  margin: 4mm 0 2mm;
   font-weight: bold;
 }
 
 .episode {
-  margin: 6mm 0;
+  margin: 4mm 0;
   min-height: 70mm;
   white-space: pre-wrap;
   line-height: 1.8;
 }
 
 .signature {
-  margin-top: 15mm;
+  margin-top: 10mm;
   display: flex;
   flex-direction: column;
 }
