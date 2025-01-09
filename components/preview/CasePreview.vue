@@ -257,12 +257,14 @@ const handleEpisodeEdit = (e: Event) => {
 }
 
 .preview-wrapper {
-  padding: 2rem;
-  min-height: calc(100vh - 64px);
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  overflow-y: auto;
+  width: 210mm;
+  min-height: 297mm;
+  padding: 20mm;
+  background-color: white;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  margin: 0 auto;
+  box-sizing: border-box;
+  page-break-inside: avoid;
 }
 
 .preview-container {
@@ -291,17 +293,18 @@ const handleEpisodeEdit = (e: Event) => {
   font-weight: bold;
   margin-bottom: 10mm;
   user-select: none;
+  page-break-after: avoid;
 }
 
 .content {
   text-indent: 1em;
-  /* margin-bottom: 10mm; */
   line-height: 1.8;
+  page-break-inside: avoid;
 }
 
-/* .employment-info {
-  margin: 10mm 0;
-} */
+.employment-info {
+  page-break-inside: avoid;
+}
 
 .employment-item {
   margin: 4mm 0;
@@ -309,6 +312,7 @@ const handleEpisodeEdit = (e: Event) => {
   align-items: baseline;
   padding-left: 2em;
   position: relative;
+  page-break-inside: avoid;
 }
 
 .employment-item::before {
@@ -320,6 +324,7 @@ const handleEpisodeEdit = (e: Event) => {
 .work-details {
   margin: 6mm 0 4mm;
   font-weight: bold;
+  page-break-after: avoid;
 }
 
 .episode {
@@ -327,23 +332,24 @@ const handleEpisodeEdit = (e: Event) => {
   min-height: 70mm;
   white-space: pre-wrap;
   line-height: 1.8;
+  page-break-inside: auto;
+  padding-bottom: 6mm;
 }
 
 .signature {
   margin-top: 10mm;
   display: flex;
   flex-direction: column;
+  page-break-inside: avoid;
+  page-break-before: auto;
 }
 
 .set-right {
   text-align: right;
-  /* padding-right: 10mm; */
 }
 
 .date {
   margin-bottom: 2mm;
-  /* text-align: right; */
-  /* padding-right: 30mm; */
 }
 
 .sign-item {
@@ -351,7 +357,7 @@ const handleEpisodeEdit = (e: Event) => {
   display: flex;
   align-items: baseline;
   justify-content: flex-start;
-  /* padding-left: 65mm; */
+  page-break-inside: avoid;
 }
 
 .sign-item::before {
@@ -363,7 +369,6 @@ const handleEpisodeEdit = (e: Event) => {
 .underline {
   border-bottom: 1px solid black;
   padding-bottom: 0.5mm;
-  /* width: 95mm; */
   display: inline-block;
   text-align: left;
   padding-left: 3mm;
