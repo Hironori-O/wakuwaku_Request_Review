@@ -169,12 +169,11 @@ const handleGeneratePdf = async (e: Event) => {
       backgroundColor: '#ffffff'
     })
 
-    // キャンバスからPDFを生成
+    // PDFの設定
     const pdf = new jsPDF({
       orientation: 'portrait',
       unit: 'mm',
-      format: 'a4',
-      compress: true
+      format: 'a4'
     })
 
     // キャンバスの寸法を取得
@@ -257,14 +256,12 @@ const handleEpisodeEdit = (e: Event) => {
 }
 
 .preview-wrapper {
-  width: 210mm;
-  min-height: 297mm;
-  padding: 20mm;
-  background-color: white;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-  margin: 0 auto;
-  box-sizing: border-box;
-  page-break-inside: avoid;
+  padding: 2rem;
+  min-height: calc(100vh - 64px);
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  overflow-y: auto;
 }
 
 .preview-container {
@@ -275,6 +272,7 @@ const handleEpisodeEdit = (e: Event) => {
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   margin: 0 auto;
   box-sizing: border-box;
+  position: relative;
 }
 
 .preview-content {
@@ -293,17 +291,16 @@ const handleEpisodeEdit = (e: Event) => {
   font-weight: bold;
   margin-bottom: 10mm;
   user-select: none;
-  page-break-after: avoid;
 }
 
 .content {
   text-indent: 1em;
   line-height: 1.8;
-  page-break-inside: avoid;
+  margin-bottom: 8mm;
 }
 
 .employment-info {
-  page-break-inside: avoid;
+  margin: 8mm 0;
 }
 
 .employment-item {
@@ -312,7 +309,6 @@ const handleEpisodeEdit = (e: Event) => {
   align-items: baseline;
   padding-left: 2em;
   position: relative;
-  page-break-inside: avoid;
 }
 
 .employment-item::before {
@@ -324,7 +320,6 @@ const handleEpisodeEdit = (e: Event) => {
 .work-details {
   margin: 6mm 0 4mm;
   font-weight: bold;
-  page-break-after: avoid;
 }
 
 .episode {
@@ -332,20 +327,12 @@ const handleEpisodeEdit = (e: Event) => {
   min-height: 70mm;
   white-space: pre-wrap;
   line-height: 1.8;
-  page-break-inside: auto;
-  padding-bottom: 6mm;
 }
 
 .signature {
-  margin-top: 10mm;
+  margin-top: 15mm;
   display: flex;
   flex-direction: column;
-  page-break-inside: avoid;
-  page-break-before: auto;
-}
-
-.set-right {
-  text-align: right;
 }
 
 .date {
@@ -357,7 +344,6 @@ const handleEpisodeEdit = (e: Event) => {
   display: flex;
   align-items: baseline;
   justify-content: flex-start;
-  page-break-inside: avoid;
 }
 
 .sign-item::before {
@@ -388,5 +374,9 @@ const handleEpisodeEdit = (e: Event) => {
 .editable:focus {
   outline: none;
   background-color: rgba(0, 0, 0, 0.05);
+}
+
+.set-right {
+  text-align: right;
 }
 </style> 
